@@ -1,0 +1,302 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>وكيلي الذكي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@600&display=swap">
+<style>
+/* Layout: one-screen chat. Header strip, scrolling thread, composer pinned to the bottom edge. */
+:root{
+  --bg:#EDF0F2; --surface:#FFFFFF; --fg:#15222B; --muted:#5B6B76; --line:#D3DADF;
+  --accent:#0B7A69; --accent-fg:#FFFFFF; --code:#E3E8EC; --danger:#B3261E;
+  --font-body:'IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+  --font-display:'Reem Kufi','IBM Plex Sans Arabic',system-ui,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A20; --surface:#16252D; --fg:#E6EEF2; --muted:#94A6B1; --line:#2A3C46;
+    --accent:#3FC7AC; --accent-fg:#06231D; --code:#0B141A; --danger:#FF8A80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A20; --surface:#16252D; --fg:#E6EEF2; --muted:#94A6B1; --line:#2A3C46;
+  --accent:#3FC7AC; --accent-fg:#06231D; --code:#0B141A; --danger:#FF8A80; color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--font-body); font-size:16px; line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  box-sizing:border-box;
+}
+#app{height:100%; display:flex; flex-direction:column; max-width:760px; margin:0 auto; min-width:0}
+header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-block:10px; border-bottom:1px solid var(--line)}
+h1{font-family:var(--font-display); font-size:22px; margin:0; font-weight:600; letter-spacing:.01em}
+button{font:inherit; cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.ghost{background:none; border:1px solid var(--line); color:var(--fg); border-radius:8px; padding:6px 12px}
+.ghost:hover{border-color:var(--accent)}
+#thread{flex:1; min-height:0; overflow-y:auto; padding-block:16px; display:flex; flex-direction:column; gap:14px}
+.msg{display:flex; flex-direction:column; gap:8px; min-width:0; max-width:92%}
+.msg.user{align-self:flex-start}
+.msg.bot{align-self:flex-end; width:92%}
+.bubble{padding:10px 14px; border-radius:14px; overflow-wrap:anywhere; white-space:pre-wrap}
+.user .bubble{background:var(--accent); color:var(--accent-fg); border-end-start-radius:4px}
+.bot .bubble{background:var(--surface); border:1px solid var(--line); border-end-end-radius:4px}
+.bot .bubble:empty{display:none}
+.bubble pre{direction:ltr; text-align:left; background:var(--code); border-radius:8px; padding:10px 12px; margin:8px 0; overflow-x:auto; font-family:var(--font-mono); font-size:13px; line-height:1.55; white-space:pre}
+.thinking{color:var(--muted); font-size:14px}
+.thinking::after{content:"…"; animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.thinking::after{animation:none}}
+.cards{display:flex; flex-direction:column; gap:8px; min-width:0}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0}
+.card .row{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap}
+.card .name{font-weight:600; direction:ltr; overflow-wrap:anywhere}
+.card .meta{color:var(--muted); font-size:13px}
+.card pre{direction:ltr; text-align:left; background:var(--code); border-radius:8px; padding:8px 10px; margin:8px 0 0; overflow-x:auto; max-height:240px; font-family:var(--font-mono); font-size:12.5px; white-space:pre-wrap; overflow-wrap:anywhere}
+.card img{display:block; width:100%; max-height:340px; object-fit:contain; background:#fff; border-radius:8px; margin-top:8px}
+.card.err{border-color:var(--danger)}
+.actions{display:flex; gap:6px}
+.mini{background:none; border:1px solid var(--line); color:var(--fg); border-radius:8px; padding:3px 10px; font-size:14px}
+.mini.primary{background:var(--accent); color:var(--accent-fg); border-color:var(--accent)}
+.tool{color:var(--muted); font-size:13px}
+#empty{margin:auto 0; display:flex; flex-direction:column; gap:14px}
+#empty p{margin:0; color:var(--muted)}
+#empty h2{font-family:var(--font-display); font-size:28px; line-height:1.3; margin:0; text-wrap:balance}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{background:var(--surface); border:1px solid var(--line); color:var(--fg); border-radius:999px; padding:7px 14px; font-size:15px; text-align:start}
+.chip:hover{border-color:var(--accent)}
+.note{color:var(--muted); font-size:13px; text-align:center}
+.note.bad{color:var(--danger)}
+form{display:flex; gap:8px; align-items:flex-end; padding-top:10px; padding-bottom:max(10px,env(safe-area-inset-bottom,0px)); border-top:1px solid var(--line)}
+textarea{flex:1; min-width:0; resize:none; max-height:140px; font:inherit; background:var(--surface); color:var(--fg); border:1px solid var(--line); border-radius:12px; padding:10px 12px; line-height:1.5}
+.send{background:var(--accent); color:var(--accent-fg); border:0; border-radius:12px; padding:11px 18px; font-weight:600}
+.send[disabled],textarea[disabled]{opacity:.5; cursor:not-allowed}
+</style>
+
+<div id="app" dir="rtl" lang="ar">
+  <header>
+    <h1>وكيلي الذكي</h1>
+    <button class="ghost" id="reset" type="button">محادثة جديدة</button>
+  </header>
+  <main id="thread" aria-live="polite">
+    <section id="empty">
+      <h2>اكتب ما تريده، وأنا أنفّذه</h2>
+      <p>أكتب الأكواد، أنشئ الملفات، أرسم الصور والتصاميم، وأشغّل كود JavaScript لأحسب وأجرّب.</p>
+      <div class="chips" id="chips"></div>
+    </section>
+  </main>
+  <div class="note" id="status">جارٍ التحضير</div>
+  <form id="form">
+    <textarea id="box" rows="1" placeholder="اكتب طلبك هنا" disabled></textarea>
+    <button class="send" id="send" type="submit" disabled>إرسال</button>
+  </form>
+</div>
+
+<script>
+const RULES = `أنت وكيل ذكي داخل تطبيق ويب على الهاتف. أجب بالعربية افتراضيًا وباختصار.
+أدواتك: create_file لإنشاء ملف (كود أو نص أو markdown أو html أو csv أو json) وتقديمه للمستخدم، read_file وlist_files لملفات هذه الجلسة، make_image لرسم صورة أو تصميم من كود SVG كامل، run_js لتشغيل كود JavaScript في بيئة معزولة (للحسابات والتجارب، استخدم console.log أو return للنتيجة).
+لا يمكنك تصفح الإنترنت ولا تشغيل أوامر شِل أو لغات أخرى على جهاز المستخدم. إن طُلب منك شيء خارج أدواتك فقل ذلك بوضوح واعرض أقرب بديل.
+عند صنع صورة استخدم make_image مع SVG يبدأ بوسم svg وفيه viewBox. عند كتابة كود طويل ضعه في ملف بدل لصقه في الرد.
+لا تدّعِ أنك نفّذت شيئًا لم تنفّذه بأداة.`;
+
+const SUGGESTIONS = [
+  'ارسم شعارًا بسيطًا لمقهى اسمه «ركن»',
+  'احسب بالكود: كم يوم بين اليوم و1 يناير 2027؟',
+  'اكتب سكربت بايثون يغيّر أسماء ملفات مجلد بالترتيب وضعه في ملف',
+  'اكتب خطة أسبوعية للدراسة في ملف markdown'
+];
+const ALLOWED_EXT = new Set('gif png jpg jpeg webp mp4 webm mov txt json md docx pptx epub csv ttf html svg pdf xlsx zip'.split(' '));
+
+const $ = (id) => document.getElementById(id);
+const thread = $('thread'), box = $('box'), sendBtn = $('send'), statusEl = $('status');
+let sample = null, downloads = null, canTools = false;
+let ctl = null, busy = false;
+const turns = [];
+const files = new Map();
+
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function nearBottom(){ return thread.scrollHeight - thread.scrollTop - thread.clientHeight < 120; }
+function stick(was){ if (was) thread.scrollTop = thread.scrollHeight; }
+
+function renderRich(target, text){
+  target.textContent = '';
+  const re = /```[\w+-]*\n?([\s\S]*?)```/g; let last = 0, m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) target.append(document.createTextNode(text.slice(last, m.index).replace(/^\n+|\n+$/g, '')));
+    target.append(el('pre', '', m[1].replace(/\n$/, '')));
+    last = re.lastIndex;
+  }
+  if (last < text.length) target.append(document.createTextNode(text.slice(last).replace(/^\n+/, '')));
+}
+
+function fmtSize(n){ return n < 1024 ? n + ' بايت' : (n / 1024).toFixed(1) + ' ك.ب'; }
+
+async function saveToDevice(name, data, noteEl){
+  if (!downloads) { noteEl.textContent = 'الحفظ غير متاح في هذا العرض'; return; }
+  let fname = name;
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (!ALLOWED_EXT.has(ext)) fname = name + '.txt';
+  try { await downloads.save({ filename: fname, data }); noteEl.textContent = 'تم الحفظ'; }
+  catch (e) { noteEl.textContent = e && e.code === 'declined' ? 'أُلغي الحفظ' : 'تعذّر الحفظ'; }
+}
+
+function fileCard(cards, name, content){
+  const c = el('div', 'card');
+  const row = el('div', 'row');
+  const info = el('div');
+  info.append(el('div', 'name', name), el('div', 'meta', fmtSize(new Blob([content]).size)));
+  const act = el('div', 'actions');
+  const view = el('button', 'mini', 'عرض'); view.type = 'button';
+  const save = el('button', 'mini primary', 'حفظ'); save.type = 'button';
+  const note = el('span', 'meta');
+  act.append(view, save);
+  row.append(info, act);
+  c.append(row, note);
+  let pre = null;
+  view.onclick = () => {
+    if (pre) { pre.remove(); pre = null; view.textContent = 'عرض'; return; }
+    pre = el('pre', '', content.slice(0, 20000)); c.append(pre); view.textContent = 'إخفاء';
+  };
+  save.onclick = () => saveToDevice(name, content, note);
+  cards.append(c);
+}
+
+function svgDataUri(svg){
+  let s = svg.trim();
+  if (!/xmlns=/.test(s)) s = s.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+}
+
+function imageCard(cards, name, svg){
+  const c = el('div', 'card');
+  const row = el('div', 'row');
+  row.append(el('div', 'name', name));
+  const act = el('div', 'actions');
+  const save = el('button', 'mini primary', 'حفظ'); save.type = 'button';
+  const note = el('span', 'meta');
+  act.append(save); row.append(act);
+  const img = new Image(); img.alt = name; img.src = svgDataUri(svg);
+  c.append(row, img, note);
+  save.onclick = () => saveToDevice(name, svg, note);
+  cards.append(c);
+}
+
+function runJs(code, signal){
+  return new Promise((resolve) => {
+    const src = `const __logs=[];const __fmt=(a)=>{try{return typeof a==='string'?a:JSON.stringify(a)}catch(e){return String(a)}};
+console.log=(...a)=>__logs.push(a.map(__fmt).join(' '));console.error=console.log;console.warn=console.log;
+(async()=>{try{const __r=await (async()=>{\n${code}\n})();postMessage({logs:__logs,result:__r===undefined?undefined:__fmt(__r)})}catch(e){postMessage({logs:__logs,error:String(e&&e.message||e)})}})();`;
+    let w, url, done = false;
+    const finish = (v) => { if (done) return; done = true; clearTimeout(t); try { w && w.terminate(); } catch(e){} try { url && URL.revokeObjectURL(url); } catch(e){} resolve(v); };
+    const t = setTimeout(() => finish({ logs: [], error: 'انتهت المهلة (5 ثوانٍ)' }), 5000);
+    signal && signal.addEventListener('abort', () => finish({ logs: [], error: 'أُوقف' }));
+    try {
+      url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+      w = new Worker(url);
+      w.onmessage = (e) => finish(e.data);
+      w.onerror = (e) => finish({ logs: [], error: e.message || 'خطأ في الكود' });
+    } catch (e) { finish({ logs: [], error: 'تعذّر تشغيل البيئة المعزولة' }); }
+  });
+}
+
+function buildTools(cards){
+  const safeName = (n) => String(n || 'file.txt').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 80) || 'file.txt';
+  return [
+    { name: 'create_file', description: 'ينشئ ملفًا نصيًا ويعرضه للمستخدم مع زر حفظ. يعيد تأكيدًا باسم الملف.',
+      inputSchema: { type: 'object', properties: { filename: { type: 'string', description: 'اسم الملف مع الامتداد' }, content: { type: 'string' } }, required: ['filename', 'content'] },
+      execute(i){ const n = safeName(i.filename), c = String(i.content ?? ''); files.set(n, c); fileCard(cards, n, c); return 'تم إنشاء ' + n + ' (' + c.length + ' حرفًا)'; } },
+    { name: 'read_file', description: 'يقرأ ملفًا أُنشئ في هذه الجلسة ويعيد محتواه.',
+      inputSchema: { type: 'object', properties: { filename: { type: 'string' } }, required: ['filename'] },
+      execute(i){ const n = safeName(i.filename); if (!files.has(n)) throw new Error('الملف غير موجود'); return files.get(n).slice(0, 20000); } },
+    { name: 'list_files', description: 'يعيد أسماء الملفات التي أُنشئت في هذه الجلسة.',
+      execute(){ return files.size ? [...files.keys()].join('\n') : '(لا توجد ملفات)'; } },
+    { name: 'make_image', description: 'يرسم صورة أو تصميمًا من كود SVG كامل ويعرضه للمستخدم مع زر حفظ.',
+      inputSchema: { type: 'object', properties: { filename: { type: 'string', description: 'اسم بامتداد .svg' }, svg: { type: 'string', description: 'كود SVG كامل يبدأ بالوسم svg' } }, required: ['filename', 'svg'] },
+      execute(i){ let n = safeName(i.filename); if (!/\.svg$/i.test(n)) n += '.svg'; const s = String(i.svg || ''); if (!/^\s*<svg[\s>]/i.test(s)) throw new Error('الكود يجب أن يبدأ بالوسم svg'); imageCard(cards, n, s); return 'تم رسم ' + n; } },
+    { name: 'run_js', description: 'يشغّل كود JavaScript في بيئة معزولة (5 ثوانٍ، بلا إنترنت أو DOM) ويعيد ما طُبع بـ console.log وقيمة return.',
+      inputSchema: { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
+      async execute(i, ctx){
+        const code = String(i.code || '');
+        const c = el('div', 'card'); c.append(el('div', 'meta', 'تشغيل JavaScript'), el('pre', '', code.slice(0, 4000)));
+        cards.append(c);
+        const r = await runJs(code, ctx && ctx.signal);
+        const out = (r.logs || []).join('\n') + (r.result !== undefined ? (r.logs && r.logs.length ? '\n' : '') + '→ ' + r.result : '') + (r.error ? '\nخطأ: ' + r.error : '');
+        const o = el('pre', '', out.trim() || '(لا مخرجات)'); c.append(o);
+        if (r.error) c.classList.add('err');
+        return out.slice(0, 4000) || '(لا مخرجات)';
+      } }
+  ];
+}
+
+const ERR = {
+  not_granted: 'لم تسمح للتطبيق باستخدام Claude. أعد فتح الصفحة واقبل الإذن.',
+  sampling_disabled: 'Claude غير متاح لهذا الحساب.',
+  rate_limited: 'وصلت إلى حدّ الاستخدام. انتظر قليلًا ثم حاول.',
+  session_expired: 'انتهت الجلسة. سجّل الدخول من جديد.',
+  refused: 'تعذّر تنفيذ هذا الطلب. غيّر صياغته.',
+  prompt_too_large: 'المحادثة طالت. ابدأ محادثة جديدة.',
+  empty_completion: 'لم يصل ردّ. جرّب صياغة أبسط.'
+};
+
+function setBusy(b){
+  busy = b; box.disabled = b || !sample; sendBtn.disabled = !sample;
+  sendBtn.textContent = b ? 'إيقاف' : 'إرسال';
+  statusEl.textContent = b ? 'يعمل على طلبك' : (canTools ? '' : 'الأدوات غير متاحة في هذا العرض، المحادثة فقط');
+  statusEl.classList.remove('bad');
+}
+
+async function send(text){
+  text = (text || '').trim();
+  if (!text || busy || !sample) return;
+  const empty = $('empty'); if (empty) empty.remove();
+  const u = el('div', 'msg user'); u.append(el('div', 'bubble', text)); thread.append(u);
+  const b = el('div', 'msg bot'); const bubble = el('div', 'bubble'); const think = el('div', 'thinking', 'يفكّر'); const cards = el('div', 'cards');
+  b.append(think, bubble, cards); thread.append(b); thread.scrollTop = thread.scrollHeight;
+  box.value = ''; box.style.height = 'auto';
+  turns.push({ role: 'user', content: text });
+  ctl = new AbortController(); setBusy(true);
+  const opts = { cache: false, signal: ctl.signal,
+    onText: ({ text: t }) => { const was = nearBottom(); think.remove(); renderRich(bubble, t); stick(was); } };
+  if (canTools) opts.tools = buildTools(cards);
+  try {
+    const r = await sample([{ role: 'user', content: RULES }, ...turns], opts);
+    think.remove(); renderRich(bubble, r.text); turns.push({ role: 'assistant', content: r.text });
+    if (r.truncated) cards.after(el('div', 'note', 'الرد انقطع لطوله. اطلب المتابعة.'));
+  } catch (e) {
+    think.remove();
+    const partial = e && e.text; if (partial) { renderRich(bubble, partial); turns.push({ role: 'assistant', content: partial }); }
+    if (!e || e.code !== 'cancelled') {
+      const n = el('div', 'note bad', ERR[e && e.code] || 'حدث خلل في الاتصال. حاول مرة أخرى.'); b.append(n);
+    } else if (!partial && !cards.children.length) { b.remove(); }
+  } finally {
+    setBusy(false); ctl = null; thread.scrollTop = thread.scrollHeight; if (!box.disabled) box.focus();
+  }
+}
+
+$('form').addEventListener('submit', (e) => { e.preventDefault(); if (busy) { ctl && ctl.abort(); } else send(box.value); });
+box.addEventListener('input', () => { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 140) + 'px'; });
+box.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && e.target.value.trim() && matchMedia('(hover:hover)').matches) { e.preventDefault(); send(box.value); } });
+$('reset').addEventListener('click', () => {
+  if (busy && ctl) ctl.abort();
+  turns.length = 0; files.clear(); thread.textContent = ''; thread.append(emptyState());
+});
+
+function emptyState(){
+  const s = el('section'); s.id = 'empty';
+  s.append(el('h2', '', 'اكتب ما تريده، وأنا أنفّذه'), el('p', '', 'أكتب الأكواد، أنشئ الملفات، أرسم الصور والتصاميم، وأشغّل كود JavaScript لأحسب وأجرّب.'));
+  const chips = el('div', 'chips');
+  SUGGESTIONS.forEach((t) => { const c = el('button', 'chip', t); c.type = 'button'; c.onclick = () => send(t); chips.append(c); });
+  s.append(chips); return s;
+}
+thread.textContent = ''; thread.append(emptyState());
+
+(async () => {
+  try { sample = window.claude && await window.claude.use('sample'); } catch (e) { sample = null; }
+  try { downloads = window.claude && await window.claude.use('downloads'); } catch (e) { downloads = null; }
+  if (!sample) { statusEl.textContent = 'يعمل هذا التطبيق داخل Claude فقط. افتحه من رابط الـ Artifact.'; statusEl.classList.add('bad'); return; }
+  try { const lim = await sample.limits(); canTools = !!(lim && lim.tools); } catch (e) { canTools = false; }
+  setBusy(false); box.focus();
+})();
+</script>
+
+</body></html>
